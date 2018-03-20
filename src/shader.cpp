@@ -739,6 +739,9 @@ ShaderInfo generate_shader(const std::string &name, u8 material_type, u8 drawtyp
 	// Add planet-specific settings to header
 	if (g_settings->getBool("planet_enable"))
 		shaders_header += "#define ENABLE_PLANET\n";
+	
+	if (g_settings->getBool("planet_keep_scale"))
+		shaders_header += "#define PLANET_KEEP_SCALE\n";
 
 	shaders_header += "#define PLANET_RADIUS " + std::to_string(g_settings->getU16("planet_radius")) + "\n";
 
