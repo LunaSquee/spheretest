@@ -664,6 +664,11 @@ void LocalPlayer::applyControl(float dtime, Environment *env)
 	else
 		speedH = speedH.normalize() * movement_speed_walk;
 
+	// Planet: Apply centrifugal force
+	if (g_settings->getBool("planet_enable") && g_settings->getBool("planet_centrifugal_enable") && in_liquid == false)
+		speedV.Y += (speedH.X * speedH.X + speedH.Z * speedH.Z) /
+				(g_settings->getU16("planet_radius") * MAP_BLOCKSIZE * BS + getPosition().Y) * dtime; 
+
 	// Acceleration increase
 	f32 incH = 0; // Horizontal (X, Z)
 	f32 incV = 0; // Vertical (Y)
