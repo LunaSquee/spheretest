@@ -927,7 +927,8 @@ static void updateFastFaceRow(
 					&& next_p_corrected == p_corrected + translate_dir
 					&& next_face_dir_corrected == face_dir_corrected
 					&& memcmp(next_lights, lights, ARRLEN(lights) * sizeof(u16)) == 0
-					&& next_tile.isTileable(tile)) {
+					&& next_tile.isTileable(tile)
+					&& !g_settings->getBool("planet_enable")) {
 				next_is_different = false;
 				continuous_tiles_count++;
 			}
