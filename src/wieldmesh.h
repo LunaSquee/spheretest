@@ -74,7 +74,7 @@ struct ItemMesh
 class WieldMeshSceneNode : public scene::ISceneNode
 {
 public:
-	WieldMeshSceneNode(scene::ISceneManager *mgr, s32 id = -1, bool lighting = false);
+	WieldMeshSceneNode(scene::ISceneManager *mgr, s32 id = -1, bool lighting = false, bool wield_in_hand = false);
 	virtual ~WieldMeshSceneNode();
 
 	void setCube(const ContentFeatures &f, v3f wield_scale);
@@ -101,6 +101,9 @@ private:
 
 	// True if EMF_LIGHTING should be enabled.
 	bool m_lighting;
+
+	// True if mesh is displayed as the one currently held by the player
+	bool m_wield_in_hand;
 
 	bool m_enable_shaders;
 	bool m_anisotropic_filter;

@@ -1,6 +1,9 @@
 uniform mat4 mWorldViewProj;
+uniform mat4 mInvWorld;
+uniform mat4 mTransWorld;
 uniform mat4 mWorld;
 
+uniform float dayNightRatio;
 uniform vec3 eyePosition;
 uniform float animationTimer;
 
@@ -29,6 +32,7 @@ const float BS = 10.0;
 void main(void)
 {
 	gl_TexCoord[0] = gl_MultiTexCoord0;
+
 	vec4 pos = mWorld * gl_Vertex;
 
 #ifdef ENABLE_PLANET
@@ -64,7 +68,7 @@ void main(void)
 	//pos.y = cplx_re(circle);
 #endif
 
-	gl_Position = mWorldViewProj * pos;
+	gl_Position = mWorldViewProj * mInvWorld * pos;
 
 	vPosition = gl_Position.xyz;
 	worldPosition = (mWorld * gl_Vertex).xyz;

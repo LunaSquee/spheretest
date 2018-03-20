@@ -45,6 +45,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "wieldmesh.h"
 #include <algorithm>
 #include "client/renderingengine.h"
+#include "shader.h"
 
 class Settings;
 struct ToolCapabilities;
@@ -487,6 +488,13 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 		m_spritenode->setMaterialFlag(video::EMF_BILINEAR_FILTER, false);
 		m_spritenode->setMaterialType(video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF);
 		m_spritenode->setMaterialFlag(video::EMF_FOG_ENABLE, true);
+		if (g_settings->getBool("enable_shaders")) {
+			IShaderSource *shdrsrc = m_client->getShaderSource();
+			u16 shader_id = shdrsrc->getShader("object_shader", 1, 1);
+			m_spritenode->setMaterialType(shdrsrc->getShaderInfo(shader_id).material);
+		} else {
+			m_spritenode->setMaterialType(video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF);
+		}
 		u8 li = m_last_light;
 		m_spritenode->setColor(video::SColor(255,li,li,li));
 		m_spritenode->setSize(m_prop.visual_size*BS);
@@ -517,7 +525,13 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 			buf->getMaterial().setFlag(video::EMF_LIGHTING, false);
 			buf->getMaterial().setFlag(video::EMF_BILINEAR_FILTER, false);
 			buf->getMaterial().setFlag(video::EMF_FOG_ENABLE, true);
-			buf->getMaterial().MaterialType = video::EMT_TRANSPARENT_ALPHA_CHANNEL;
+			if (g_settings->getBool("enable_shaders")) {
+				IShaderSource *shdrsrc = m_client->getShaderSource();
+				u16 shader_id = shdrsrc->getShader("object_shader", 1, 1);
+				buf->getMaterial().MaterialType = shdrsrc->getShaderInfo(shader_id).material;
+			} else {
+				buf->getMaterial().MaterialType = video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF;
+			}
 			// Add to mesh
 			mesh->addMeshBuffer(buf);
 			buf->drop();
@@ -536,7 +550,13 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 			buf->getMaterial().setFlag(video::EMF_LIGHTING, false);
 			buf->getMaterial().setFlag(video::EMF_BILINEAR_FILTER, false);
 			buf->getMaterial().setFlag(video::EMF_FOG_ENABLE, true);
-			buf->getMaterial().MaterialType = video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF;
+			if (g_settings->getBool("enable_shaders")) {
+				IShaderSource *shdrsrc = m_client->getShaderSource();
+				u16 shader_id = shdrsrc->getShader("object_shader", 1, 1);
+				buf->getMaterial().MaterialType = shdrsrc->getShaderInfo(shader_id).material;
+			} else {
+				buf->getMaterial().MaterialType = video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF;
+			}
 			// Add to mesh
 			mesh->addMeshBuffer(buf);
 			buf->drop();
@@ -563,8 +583,15 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 
 		m_meshnode->setMaterialFlag(video::EMF_LIGHTING, false);
 		m_meshnode->setMaterialFlag(video::EMF_BILINEAR_FILTER, false);
-		m_meshnode->setMaterialType(video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF);
 		m_meshnode->setMaterialFlag(video::EMF_FOG_ENABLE, true);
+
+		if (g_settings->getBool("enable_shaders")) {
+			IShaderSource *shdrsrc = m_client->getShaderSource();
+			u16 shader_id = shdrsrc->getShader("object_shader", 1, 1);
+			m_meshnode->setMaterialType(shdrsrc->getShaderInfo(shader_id).material);
+		} else {
+			m_meshnode->setMaterialType(video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF);
+		}
 	}
 	else if(m_prop.visual == "mesh") {
 		infostream<<"GenericCAO::addToScene(): mesh"<<std::endl;
@@ -592,9 +619,16 @@ void GenericCAO::addToScene(ITextureSource *tsrc)
 
 			m_animated_meshnode->setMaterialFlag(video::EMF_LIGHTING, true);
 			m_animated_meshnode->setMaterialFlag(video::EMF_BILINEAR_FILTER, false);
-			m_animated_meshnode->setMaterialType(video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF);
 			m_animated_meshnode->setMaterialFlag(video::EMF_FOG_ENABLE, true);
 			m_animated_meshnode->setMaterialFlag(video::EMF_BACK_FACE_CULLING, backface_culling);
+
+			if (g_settings->getBool("enable_shaders")) {
+				IShaderSource *shdrsrc = m_client->getShaderSource();
+				u16 shader_id = shdrsrc->getShader("object_shader", 1, 1);
+				m_animated_meshnode->setMaterialType(shdrsrc->getShaderInfo(shader_id).material);
+			} else {
+				m_animated_meshnode->setMaterialType(video::EMT_TRANSPARENT_ALPHA_CHANNEL_REF);
+			}
 		}
 		else
 			errorstream<<"GenericCAO::addToScene(): Could not load mesh "<<m_prop.mesh<<std::endl;
@@ -1050,6 +1084,9 @@ void GenericCAO::updateTextures(std::string mod)
 						.setFlag(video::EMF_BILINEAR_FILTER, use_bilinear_filter);
 				m_animated_meshnode->getMaterial(i)
 						.setFlag(video::EMF_ANISOTROPIC_FILTER, use_anisotropic_filter);
+				if (g_settings->getBool("enable_shaders")) {
+					m_animated_meshnode->getMaterial(i).setTexture(2, tsrc->getShaderFlagsTexture(false));
+				}
 			}
 			for (u32 i = 0; i < m_prop.colors.size() &&
 			i < m_animated_meshnode->getMaterialCount(); ++i)
