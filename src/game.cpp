@@ -1134,8 +1134,12 @@ void Game::handlePlanet() {
 	// Quick hack: Teleport to other side of planet at planet edges
 	if (g_settings->getBool("planet_enable")) {
 		// Round planet circumference up to even number of blocks, value in x/z coordinates
-		int planet_circumference = ceil(g_settings->getU16("planet_radius") * M_PI) * BS * MAP_BLOCKSIZE * 2;
+		int planet_radius = g_settings->getU16("planet_radius");
+		int planet_circumference = ceil(planet_radius * M_PI) * BS * MAP_BLOCKSIZE * 2;
+
 		v3f playerpos = player->getPosition();
+
+		// Teleport to other side of planet at planet edges
 		if (playerpos.X > planet_circumference / 2 - 0.5 * BS)
 			playerpos.X = -(float)planet_circumference / 2 - 0.5 * BS;
 		if (playerpos.X < -planet_circumference / 2 - 0.5 * BS)
@@ -1145,8 +1149,19 @@ void Game::handlePlanet() {
 		if (playerpos.Z < -planet_circumference / 2 - 0.5 * BS)
 			playerpos.Z = (float)planet_circumference / 2 - 0.5 * BS;
 
+		// Falling through the planet. The point on the other side is defined as
+		// pos.X += circumference / 2, as if the planet was a torus.
+		if (g_settings->getBool("planet_fallthrough_enable")) {
+			if (playerpos.Y < -planet_radius * MAP_BLOCKSIZE * BS) {
+				playerpos.Y = -planet_radius * MAP_BLOCKSIZE * BS + BS;
+				playerpos.X += planet_circumference / 2. * (playerpos.X < 0 ? 1 : -1);
+				v3f playerspeed = player->getSpeed();
+				playerspeed.Y *= -1;
+				player->setSpeed(playerspeed);
+			}
+		}
+ 
 		m_planet_warp_changed = player->getPosition() != playerpos;
-
 		player->setPosition(playerpos);
 	}
 }
