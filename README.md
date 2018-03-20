@@ -1,3 +1,29 @@
+Diamondtest
+===========
+This repository is a port of [spheretest](https://github.com/Jeija/spheretest) by [Jeija](https://github.com/Jeija) to the latest version of Minetest. There are bugs, help wanted!!
+
+Original **`README`**:
+In order to compile spheretest for your platform, follow the minetest-specific instructions below.
+I also recommend you to get `minetest_game` and your favorite mods for the standard minetest experience.
+Then, create a file `minetest.conf` and add the following lines to it:
+
+```
+planet_enable = true
+planet_radius = 2
+planet_keep_scale = true
+planet_centrifugal_enable = true
+planet_realistic_gravity = true
+movement_gravity = 10
+enable_clouds = 0
+active_block_range = 4
+active_object_send_range_blocks = 4
+viewing_range = 400
+```
+
+You can tweak these settings and see how they affect the planet's appearance and behaviour.
+In the game, create a new world with Mapgen "flat". The planet edges are very glitchy, so anything other than "flat" won't look good.
+Keep in mind that this is only a technical demo and not intended to be a full-featured game.
+
 Minetest
 ========
 

@@ -274,10 +274,10 @@ collisionMoveResult collisionMoveSimple(Environment *env, IGameDef *gamedef,
 
 	int planet_circumference = ceil(g_settings->getU16("planet_radius") * M_PI) * 2 * MAP_BLOCKSIZE;
 
-	v3s16 p;
-	for (p.X = min.X; p.X <= max.X; p.X++)
-	for (p.Y = min.Y; p.Y <= max.Y; p.Y++)
-	for (p.Z = min.Z; p.Z <= max.Z; p.Z++) {
+	for (s16 x = min.X; x <= max.X; x++)
+	for (s16 y = min.Y; y <= max.Y; y++)
+	for (s16 z = min.Z; z <= max.Z; z++) {
+		v3s16 p(x,y,z);
 		if (g_settings->getBool("planet_enable")) {
 			if (p.X >= planet_circumference / 2) p.X -= planet_circumference;
 			if (p.Z >= planet_circumference / 2) p.Z -= planet_circumference;
