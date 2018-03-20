@@ -238,6 +238,17 @@ void RemoteClient::GetNextBlocks (
 			v3s16 p = *li + center;
 
 			/*
+				Planet: Map wraps around, so if block outside of the
+				map would be theoretically selected, send block on
+				the opposite side of the map instead
+			*/
+			int planet_circumference_blocks = ceil(g_settings->getU16("planet_radius") * M_PI) * 2;
+			if (p.X >= planet_circumference_blocks / 2) p.X -= planet_circumference_blocks;
+			if (p.Z >= planet_circumference_blocks / 2) p.Z -= planet_circumference_blocks;
+			if (p.X < -planet_circumference_blocks / 2) p.X += planet_circumference_blocks;
+			if (p.Z < -planet_circumference_blocks / 2) p.Z += planet_circumference_blocks;
+
+			/*
 				Send throttling
 				- Don't allow too many simultaneous transfers
 				- EXCEPT when the blocks are very close
@@ -284,7 +295,7 @@ void RemoteClient::GetNextBlocks (
 						d_blocks_in_sight, &dist) ||
 					(playerspeed.getLength() > 1.0f * BS &&
 					isBlockInSight(p, camera_pos, playerspeeddir, 0.1f,
-						d_blocks_in_sight)))) {
+						d_blocks_in_sight))) && !g_settings->getBool("planet_enable")) {
 				continue;
 			}
 
