@@ -279,6 +279,10 @@ void LBMManager::applyLBMs(ServerEnvironment *env, MapBlock *block, u32 stamp)
 
 void fillRadiusBlock(v3s16 p0, s16 r, std::set<v3s16> &list)
 {
+	bool planet_enable = g_settings->getBool("planet_enable");
+	int planet_radius = g_settings->getU16("planet_radius");
+	int planet_circumference = ceil(g_settings->getU16("planet_radius") * M_PI) * 2;
+
 	v3s16 p;
 	for(p.X=p0.X-r; p.X<=p0.X+r; p.X++)
 		for(p.Y=p0.Y-r; p.Y<=p0.Y+r; p.Y++)
@@ -287,7 +291,26 @@ void fillRadiusBlock(v3s16 p0, s16 r, std::set<v3s16> &list)
 				// limit to a sphere
 				if (p.getDistanceFrom(p0) <= r) {
 					// Set in list
-					list.insert(p);
+					// Activate blocks across planet edges, insert in list
+					if (planet_enable) {
+						v3s16 ppos = p;
+						if (ppos.X >= planet_circumference / 2)
+							ppos.X -= planet_circumference;
+						if (ppos.X < -planet_circumference / 2)
+							ppos.X += planet_circumference;
+						if (ppos.Z >= planet_circumference / 2)
+							ppos.Z -= planet_circumference;
+						if (ppos.Z < -planet_circumference / 2)
+							ppos.Z += planet_circumference;
+						if (ppos.Y < -planet_radius) {
+							ppos.Y = -planet_radius - ppos.Y;
+							ppos.X += planet_circumference / 2 * (ppos.X < 0 ? 1 : -1);
+						}
+			
+						list.insert(ppos);
+					} else {
+						list.insert(p);
+					}
 				}
 			}
 }
@@ -1483,6 +1506,9 @@ void ServerEnvironment::getAddedActiveObjects(PlayerSAO *playersao, s16 radius,
 
 	if (player_radius_f < 0)
 		player_radius_f = 0;
+
+	bool planet_enable = g_settings->getBool("planet_enable");
+	int planet_circumference = ceil(g_settings->getU16("planet_radius") * M_PI) * 2 * MAP_BLOCKSIZE * BS;
 	/*
 		Go through the object list,
 		- discard removed/deactivated objects,
@@ -1503,6 +1529,19 @@ void ServerEnvironment::getAddedActiveObjects(PlayerSAO *playersao, s16 radius,
 
 		f32 distance_f = object->getBasePosition().
 			getDistanceFrom(playersao->getBasePosition());
+
+		// Distances on the planet are different, calculate distance across edges
+		if (planet_enable) {
+			for (int wrapx = -1; wrapx <= 1; ++wrapx)
+			for (int wrapz = -1; wrapz <= 1; ++wrapz) {
+				float dist = object->getBasePosition().getDistanceFrom(
+					v3f(playersao->getBasePosition() - v3f(wrapx, 0, wrapz) * planet_circumference));
+
+				if (dist < distance_f)
+					distance_f = dist;
+			}
+		}
+
 		if (object->getType() == ACTIVEOBJECT_TYPE_PLAYER) {
 			// Discard if too far
 			if (distance_f > player_radius_f && player_radius_f != 0)
@@ -1534,6 +1573,9 @@ void ServerEnvironment::getRemovedActiveObjects(PlayerSAO *playersao, s16 radius
 
 	if (player_radius_f < 0)
 		player_radius_f = 0;
+
+	bool planet_enable = g_settings->getBool("planet_enable");
+	int planet_circumference = ceil(g_settings->getU16("planet_radius") * M_PI) * 2 * MAP_BLOCKSIZE * BS;
 	/*
 		Go through current_objects; object is removed if:
 		- object is not found in m_active_objects (this is actually an
@@ -1558,6 +1600,19 @@ void ServerEnvironment::getRemovedActiveObjects(PlayerSAO *playersao, s16 radius
 		}
 
 		f32 distance_f = object->getBasePosition().getDistanceFrom(playersao->getBasePosition());
+
+		// Distances on the planet are different, calculate distance across edges
+		if (planet_enable) {
+			for (int wrapx = -1; wrapx <= 1; ++wrapx)
+			for (int wrapz = -1; wrapz <= 1; ++wrapz) {
+				float dist = object->getBasePosition().getDistanceFrom(
+					v3f(playersao->getBasePosition() - v3f(wrapx, 0, wrapz) * planet_circumference));
+
+				if (dist < distance_f)
+					distance_f = dist;
+			}
+		}
+
 		if (object->getType() == ACTIVEOBJECT_TYPE_PLAYER) {
 			if (distance_f <= player_radius_f || player_radius_f == 0)
 				continue;
