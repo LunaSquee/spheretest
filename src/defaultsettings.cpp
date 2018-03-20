@@ -389,6 +389,10 @@ void set_default_settings(Settings *settings)
 	settings->setDefault("projecting_dungeons", "true");
 	settings->setDefault("enable_mapgen_debug_info", "false");
 
+	// Planet
+	settings->setDefault("planet_enable", "false");
+	settings->setDefault("planet_radius", "30");
+
 	// Server list announcing
 	settings->setDefault("server_announce", "false");
 	settings->setDefault("server_url", "");
