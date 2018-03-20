@@ -1022,7 +1022,8 @@ MapBlockMesh::MapBlockMesh(MeshMakeData *data, v3s16 camera_offset):
 	m_shdrsrc(data->m_client->getShaderSource()),
 	m_animation_force_timer(0), // force initial animation
 	m_last_crack(-1),
-	m_last_daynight_ratio((u32) -1)
+	m_last_daynight_ratio((u32) -1),
+	m_planet_offset(v3s16(0, 0, 0))
 {
 	for (auto &m : m_mesh)
 		m = new scene::SMesh();
@@ -1266,6 +1267,17 @@ MapBlockMesh::~MapBlockMesh()
 		m = NULL;
 	}
 	delete m_minimap_mapblock;
+}
+
+void MapBlockMesh::updatePlanetOffset(v3s16 planet_offset) {
+	if (planet_offset != m_planet_offset) {
+		for (scene::IMesh *m : m_mesh) {
+			translateMesh(m, intToFloat(m_planet_offset - planet_offset, BS));
+			if (m_enable_vbo)
+				m->setDirty();
+		}
+		m_planet_offset = planet_offset;
+	}
 }
 
 bool MapBlockMesh::animate(bool faraway, float time, int crack,

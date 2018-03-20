@@ -744,6 +744,7 @@ protected:
 			const ToolCapabilities &playeritem_toolcap, f32 dtime);
 	void updateFrame(ProfilerGraph *graph, RunStats *stats, f32 dtime,
 			const CameraOrientation &cam);
+	void handlePlanet();
 	void updateProfilerGraphs(ProfilerGraph *graph);
 
 	// Misc
@@ -883,6 +884,7 @@ private:
 	bool m_invert_mouse = false;
 	bool m_first_loop_after_window_activation = false;
 	bool m_camera_offset_changed = false;
+	bool m_planet_warp_changed = false;
 
 	bool m_does_lost_focus_pause_game = false;
 
@@ -1118,9 +1120,34 @@ void Game::run()
 		// Update if minimap has been disabled by the server
 		m_game_ui->m_flags.show_minimap &= client->shouldShowMinimap();
 
+		handlePlanet();
+
 		if (m_does_lost_focus_pause_game && !device->isWindowFocused() && !isMenuActive()) {
 			showPauseMenu();
 		}
+	}
+}
+
+void Game::handlePlanet() {
+	LocalPlayer *player = client->getEnv().getLocalPlayer();
+
+	// Quick hack: Teleport to other side of planet at planet edges
+	if (g_settings->getBool("planet_enable")) {
+		// Round planet circumference up to even number of blocks, value in x/z coordinates
+		int planet_circumference = ceil(g_settings->getU16("planet_radius") * M_PI) * BS * MAP_BLOCKSIZE * 2;
+		v3f playerpos = player->getPosition();
+		if (playerpos.X > planet_circumference / 2 - 0.5 * BS)
+			playerpos.X = -(float)planet_circumference / 2 - 0.5 * BS;
+		if (playerpos.X < -planet_circumference / 2 - 0.5 * BS)
+			playerpos.X = (float)planet_circumference / 2 - 0.5 * BS;
+		if (playerpos.Z > planet_circumference / 2 - 0.5 * BS)
+			playerpos.Z = -(float)planet_circumference / 2 - 0.5 * BS;
+		if (playerpos.Z < -planet_circumference / 2 - 0.5 * BS)
+			playerpos.Z = (float)planet_circumference / 2 - 0.5 * BS;
+
+		m_planet_warp_changed = player->getPosition() != playerpos;
+
+		player->setPosition(playerpos);
 	}
 }
 
@@ -3769,7 +3796,7 @@ void Game::updateFrame(ProfilerGraph *graph, RunStats *stats, f32 dtime,
 	v3f camera_direction = camera->getDirection();
 	if (runData.update_draw_list_timer >= 0.2
 			|| runData.update_draw_list_last_cam_dir.getDistanceFrom(camera_direction) > 0.2
-			|| m_camera_offset_changed) {
+			|| m_camera_offset_changed || m_planet_warp_changed) {
 		runData.update_draw_list_timer = 0;
 		client->getEnv().getClientMap().updateDrawList();
 		runData.update_draw_list_last_cam_dir = camera_direction;
